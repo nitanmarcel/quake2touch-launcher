@@ -1,0 +1,31 @@
+name: Clickable Build
+
+on:
+  push:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        arch: [amd64, arm64, armhf]
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+      - name: Install clickable
+        run: |
+          python3 -m pip install clickable-ut
+      - name: Build
+        run: |
+          clickable build --arch ${{ matrix.arch }}
+      - name: Get short sha
+        run: |
+          echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: quake2touch.fredldotme_${{ env.SHORT_SHA }}_${{ matrix.arch }}
+          path: build/*/app/*.click
+          if-no-files-found: error
